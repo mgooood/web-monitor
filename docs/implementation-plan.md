@@ -26,7 +26,7 @@ The design prioritizes configurability so the same script can monitor other WebT
 | Component | Technology | Purpose |
 |---|---|---|
 | Runtime | Node.js | Already installed on the user’s Mac |
-| HTTP client | Built-in `fetch` | Request base page and search results |
+| HTTP client | `playwright` | Request base page and search results through a real browser to bypass bot detection |
 | HTML parser | `node-html-parser` | Fast HTML parser with zero runtime dependencies |
 | Email | `nodemailer` | Send Gmail notifications |
 | Secrets | Built-in `.env` parser | Load configuration from `.env` without extra dependencies |
@@ -37,10 +37,10 @@ The design prioritizes configurability so the same script can monitor other WebT
 ## Architecture
 
 ```text
-┌─────────────┐      ┌──────────────┐      ┌─────────────┐
-│   Cron      │─────▶│   monitor.js  │─────▶│  WebTrac    │
-│(cron/launchd)│      │              │      │ search.html │
-└─────────────┘      └──────────────┘      └─────────────┘
+┌─────────────┐      ┌──────────────┐      ┌──────────────┐      ┌─────────────┐
+│   Cron      │─────▶│   monitor.js  │─────▶│  Playwright  │─────▶│  WebTrac    │
+│(cron/launchd)│      │              │      │   Browser    │      │ search.html │
+└─────────────┘      └──────────────┘      └──────────────┘      └─────────────┘
                             │
                             ▼
                      ┌──────────────┐
@@ -65,10 +65,10 @@ The design prioritizes configurability so the same script can monitor other WebT
 ## Data Flow
 
 1. **Load configuration** from `.env`.
-2. **Fetch base search page** (`SEARCH_BASE_URL`).
+2. **Launch Playwright browser** and navigate to the base search page (`SEARCH_BASE_URL`).
 3. **Parse HTML** with `node-html-parser` to extract the `_csrf_token` hidden input value.
 4. **Construct search URL** with token and parameters: `Action=Start`, `type=SEARCH_TYPE`, `module=SEARCH_MODULE`, and any required defaults.
-5. **Fetch search results** via GET.
+5. **Navigate to search results** via Playwright.
 6. **Parse results HTML** with `node-html-parser` to find every class row.
 7. **Extract per-class metadata**:
    - Name from the result header or section title
@@ -139,28 +139,17 @@ Parse the start date from the date range cell and compare it to the current date
 All runtime values live in `.env`. The script reads them once at startup via a built-in parser that reads the file line by line and populates `process.env`. No hardcoded values should exist in `monitor.js` except defaults for the `.env` example.
 
 Key configuration groups:
-- **Gmail:** sender address, App Password, recipient
 - **Search:** base URL, type code, module
 - **Status:** keyword mappings
-- **Behavior:** waitlist toggle, check interval
-
----
-
-## Notification Strategy
-
-Use `nodemailer` with Gmail SMTP:
-- Host: `smtp.gmail.com`
-- Port: `587`
-- Security: `STARTTLS`
-- Auth: Gmail address + App Password
-
-The email subject should indicate whether an available or waitlist class was found. The body should list each class with name, activity number, section ID, dates, status, and a link to the base search page.
+- **Behavior:** waitlist toggle, optional check interval
 
 ---
 
 ## Scheduling Strategy
 
-Use macOS `cron` or `launchd` to schedule the monitor based on `CHECK_INTERVAL_MINUTES`. The script is designed to run once per invocation and exit, so the scheduler handles repetition.
+The script is designed to run once per invocation and exit. The default usage is manual: run `node monitor.js` when you are at your Mac and want to check for classes.
+
+Optional continuous scheduling is possible with macOS `cron` or `launchd` based on `CHECK_INTERVAL_MINUTES`, but this requires the Mac to stay awake to be effective. A laptop that sleeps will miss scheduled runs.
 
 Example `crontab` entry for 10 minutes:
 
@@ -174,10 +163,9 @@ For `launchd`, create a plist that runs `monitor.js` on the configured interval.
 
 ## Error Handling Strategy
 
-- **HTTP errors:** Log status code and response snippet. Do not send notification.
-- **Token extraction failure:** Log error and exit the current run. Retry on next interval.
+- **HTTP errors:** Log status code and response snippet.
+- **Token extraction failure:** Log error and exit the current run. Retry on next run.
 - **HTML structure changes:** Wrap parsing in try/catch, log the error, and continue. Do not crash the process.
-- **Email send failure:** Log the error. Do not retry within the same run to avoid spamming Gmail.
 - **No classes found:** Log and exit silently.
 - **All classes unavailable:** Log and exit silently.
 
@@ -189,8 +177,9 @@ For `launchd`, create a plist that runs `monitor.js` on the configured interval.
 |---|---|
 | WebTrac changes its HTML structure | Use `node-html-parser` CSS selectors that target semantic classes and data attributes rather than brittle DOM positions. Wrap parsing in error handling. |
 | CSRF token format changes | Extract by input name, not position. Log token presence or absence. |
-| Site rate-limits or blocks the script | Default 10-minute interval. Add jitter or back-off if needed. |
-| Gmail App Password is revoked | Document how to regenerate in `README.md`. |
+| Site rate-limits or blocks the script | Default 10-minute interval. Run manually to avoid frequent polling. |
+| Visible Chrome browser uses power and screen focus | Run manually when at the Mac; do not schedule continuously on a laptop. |
+| Mac sleep prevents scheduled runs | Default to manual execution; document optional scheduling with sleep caveats. |
 | Status keywords differ for other WebTrac locations | Make keywords configurable via `.env`. |
 | Date format varies by locale | Use a flexible date parser (e.g., `MM/DD/YYYY`). |
 | Class has no section ID suffix | Handle gracefully by setting section ID to empty string. |
@@ -207,7 +196,6 @@ The implementation is complete when:
 - The script correctly parses each class row and extracts the required metadata.
 - The script correctly identifies `Available`, `Waitlist`, and `Unavailable` classes.
 - The script filters out classes whose start date has passed.
-- The script sends an email when an `Available` class is found.
+- The script logs matching classes for the user.
 - The `.env` file controls all configurable behavior.
-- The `README.md` explains how to install, configure, and run the monitor.
-- The project runs continuously on a schedule.
+- The `README.md` explains how to install, configure, and run the monitor manually.

@@ -20,8 +20,8 @@ Approved dependencies for this project:
 
 | Dependency | Purpose | Justification |
 |---|---|---|
-| `nodemailer` | SMTP email delivery | Node.js has no built-in SMTP client. Sending email via raw sockets is impractical. |
 | `node-html-parser` | HTML parsing | Node.js has no built-in DOM parser. Regex-based HTML parsing is brittle and unsafe. |
+| `playwright` | Browser automation | The target WebTrac site is protected by Cloudflare, which blocks Node.js `fetch` and `curl`. A real browser is required to load the page and extract the CSRF token. |
 
 Not used:
 
@@ -86,14 +86,13 @@ When a dependency has runtime dependencies, check those too on Snyk. For example
 
 ### No secrets in code
 
-Never commit credentials, tokens, passwords, or private configuration to the repository. All secrets live in `.env`, which is excluded from version control via `.gitignore`.
+Never commit credentials, tokens, passwords, or private configuration to the repository. All configuration lives in `.env`, which is excluded from version control via `.gitignore`.
 
 ### Safe logging
 
 Do not log:
 
 - `_csrf_token` values
-- Gmail App Passwords
 - Any `.env` values
 
 It is safe to log:
@@ -103,10 +102,6 @@ It is safe to log:
 - Number of available or waitlist classes found
 - HTTP status codes (without response bodies containing tokens)
 - Error messages that do not contain secrets
-
-### Email credentials
-
-Use a Google App Password, not your main Gmail password. Store it in `.env`. Consider using a separate Gmail account just for notifications to limit blast radius if credentials are exposed.
 
 ### Network safety
 

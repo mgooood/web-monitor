@@ -16,6 +16,6 @@
   "license": "MIT",
   "dependencies": {
     "node-html-parser": "8.0.4",
-    "nodemailer": "9.0.3"
+    "playwright": "1.61.1"
   }
 }

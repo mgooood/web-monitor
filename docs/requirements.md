@@ -40,27 +40,15 @@ The system must detect the following availability states from the class row stat
 A class is considered available for registration when its status text is `Available`. A class is considered waitlist-only when its status text is `Waitlist`.
 
 ### F6 — Filter Future Classes
-The system must ignore classes whose end date has already passed. Only classes with a start date today or in the future should be considered for notification.
+The system must ignore classes whose end date has already passed. Only classes with a start date today or in the future should be considered.
 
-### F7 — Notify on Available Classes
-The system must send an email notification when one or more classes are detected with status `Available`.
+### F7 — Log Matching Classes
+When matching classes are found, the system must log each class with its name, activity number, section ID, date range, status, and a link to the base search page (`https://vaarlingtonweb.myvscloud.com/webtrac/web/search.html`) so the user can re-run the search manually and register.
 
-### F7.1 — Optionally Notify on Waitlist Classes
-The system may optionally send an email notification when one or more classes are detected with status `Waitlist`. This behavior must be controlled by a configuration flag.
+### F8 — Handle Empty Results
+If no woodworking classes are returned, or all classes are `Unavailable`, the system must complete without logging matching classes.
 
-### F8 — Include Class Details in Notification
-The notification must include the following for each matching class:
-- Class name
-- Activity number
-- Section ID
-- Date range
-- Status (`Available` or `Waitlist`)
-- A link to the base search page (`https://vaarlingtonweb.myvscloud.com/webtrac/web/search.html`) so the user can re-run the search manually and register.
-
-### F9 — Handle Empty Results
-If no woodworking classes are returned, or all classes are `Unavailable`, the system must complete without sending a notification.
-
-### F10 — Log Execution Status
+### F9 — Log Execution Status
 The system must log each run with a timestamp, the number of classes checked, and the number of available or waitlist classes found.
 
 ---
@@ -71,19 +59,19 @@ The system must log each run with a timestamp, the number of classes checked, an
 The entire solution must use free, open-source tools and built-in macOS capabilities. No paid services, APIs, or hosting platforms may be required.
 
 ### N2 — No New Desktop or Mobile Apps
-The solution should not require the user to install new desktop applications or mobile apps. Existing tools such as Node.js and email are acceptable.
+The solution should not require the user to install new desktop applications or mobile apps. Existing tools such as Node.js are acceptable.
 
 ### N3 — macOS Compatible
 The system must run on macOS using the existing Node.js installation.
 
-### N4 — Credential Isolation
-The system must store all credentials (Gmail App Password, sender and recipient addresses) and runtime configuration in a separate `.env` file, never in the source code.
+### N4 — Configuration Isolation
+The system must store all runtime configuration in a separate `.env` file, never in the source code.
 
 ### N5 — Version Control Safe
 The `.env` file must be excluded from version control via `.gitignore`. Only `.env.example` with placeholder values may be committed.
 
-### N6 — Periodic Execution
-The system must run automatically on a schedule without manual intervention. The default interval is configurable.
+### N6 — Optional Periodic Execution
+The system may run automatically on a schedule when the Mac is awake. It must also support manual execution by the user. The default interval is configurable.
 
 ### N7 — Resilient to HTML Changes
 The system must fail gracefully if the WebTrac HTML structure changes. It should log an error and continue to the next scheduled run.
@@ -104,20 +92,14 @@ The system must be driven by configuration values rather than hardcoded values. 
 ### C1 — Search URL and Parameters
 The base search URL, search type code, and module must be configurable via the `.env` file.
 
-### C2 — Notification Recipients
-The recipient email address must be configurable via the `.env` file.
+### C2 — Check Interval
+The polling interval in minutes must be configurable via the `.env` file. This is optional when the user runs the monitor manually.
 
-### C3 — Gmail Credentials
-The sender Gmail address and App Password must be configurable via the `.env` file.
-
-### C4 — Check Interval
-The polling interval in minutes must be configurable via the `.env` file.
-
-### C5 — Status Keywords
+### C3 — Status Keywords
 The keywords used to detect `Available`, `Waitlist`, and `Unavailable` statuses must be configurable via the `.env` file.
 
-### C6 — Waitlist Notification Toggle
-Whether to send notifications for `Waitlist` classes must be configurable via the `.env` file.
+### C4 — Waitlist Notification Toggle
+Whether to include `Waitlist` classes in the logged results must be configurable via the `.env` file.
 
 ---
 
@@ -128,8 +110,8 @@ The solution must be implemented in JavaScript and run with the existing Node.js
 
 ### I2 — Package Dependencies
 Allowed runtime dependencies are:
-- `nodemailer` for email delivery
 - `node-html-parser` for HTML parsing
+- `playwright` for browser automation when the target site blocks non-browser HTTP clients
 
 The following capabilities are implemented without external dependencies:
 - Environment variable loading via a built-in `.env` parser
@@ -156,13 +138,12 @@ The `.env.example` file must list all required environment variables with placeh
 |---|---|
 | F1, F2 | Authenticate with WebTrac and run the search |
 | F3, F4, F6 | Collect the full list of relevant woodworking classes |
-| F5, F7, F7.1 | Detect openings and notify the user |
-| F8 | Provide actionable details in the notification email |
-| F9 | Stay quiet when nothing changes |
-| F10 | Provide visibility into each run |
+| F5, F7 | Detect openings and log them for the user |
+| F8 | Stay quiet when nothing changes |
+| F9 | Provide visibility into each run |
 | N1, N2, N3 | Keep the solution free and local |
-| N4, N5 | Protect credentials |
-| N6, N9, C4 | Run repeatedly at a safe interval |
+| N4, N5 | Keep configuration out of source control |
+| N6, N9, C2 | Optionally run repeatedly at a safe interval |
 | N7, N8 | Survive site or network issues |
-| N10, C1–C6 | Make the script reusable without code changes |
+| N10, C1–C4 | Make the script reusable without code changes |
 | I1–I4 | Define the implementation boundaries |
