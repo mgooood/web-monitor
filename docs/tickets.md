@@ -105,7 +105,7 @@ Email notifications are out of scope for this version. The user will run the mon
 
 ## T6 — Implement Logging and Error Handling
 
-**Status:** In Progress
+**Status:** Done
 **Requirements:** F7, F8, N6, N7, N8, N9, C2
 **Dependencies:** T3
 
@@ -113,10 +113,10 @@ Email notifications are out of scope for this version. The user will run the mon
 Add run logging and error handling so the script produces useful output when run manually and fails gracefully when something goes wrong.
 
 ### Acceptance Criteria
-- [ ] Each run logs a timestamp, the number of classes checked, and the number of available/waitlist classes found.
-- [ ] HTTP errors, parse errors, and browser errors are logged but do not crash the process.
-- [ ] The script exits cleanly after each run.
-- [ ] The polling interval is configurable but not required for manual use.
+- [x] Each run logs a human-readable timestamp, the number of classes checked, and the number of available/waitlist classes found.
+- [x] HTTP errors, parse errors, and browser errors are logged but do not crash the process.
+- [x] The script exits cleanly after each run.
+- [x] The polling interval is configurable but not required for manual use.
 
 ### Verification
 - Run the script manually and confirm the output contains a timestamp, classes checked, and available/waitlist counts.

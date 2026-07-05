@@ -154,6 +154,21 @@ function colorStatus(status, config) {
   return useColor ? `${color}${status}${reset}` : status;
 }
 
+function logRunStart() {
+  const now = new Date();
+  const formatted = now.toLocaleString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short'
+  });
+  console.log(`Run started: ${formatted}`);
+}
+
 function logResults(results, config) {
   const availableKeyword = config.STATUS_AVAILABLE.toLowerCase();
   const waitlistKeyword = config.STATUS_WAITLIST.toLowerCase();
@@ -208,6 +223,7 @@ async function main() {
     loadEnv();
     const config = getConfig();
 
+    logRunStart();
     console.log(`Fetching base page: ${config.SEARCH_BASE_URL}`);
     browser = await launchBrowser();
     page = await browser.newPage();
