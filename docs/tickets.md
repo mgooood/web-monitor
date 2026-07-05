@@ -15,7 +15,7 @@ description: Engineering task breakdown for building the WebTrac class availabil
 
 ## T1 — Create Project Skeleton and Configuration Template
 
-**Status:** Ready for Review
+**Status:** Done
 **Requirements:** N1, N2, N4, N5, I1, I3, I4
 **Dependencies:** None
 
@@ -28,7 +28,13 @@ Set up the project structure and create the configuration files needed before im
 - [x] `.gitignore` exists and excludes `.env` and `node_modules/`.
 - [x] `README.md` exists with a brief project description and a note that setup instructions will be added later.
 - [x] `monitor.js` exists as an empty or stub file.
-- [ ] The project is initialized as a Git repository (`git init`) and an initial commit is made with the skeleton files.
+- [x] The project is initialized as a Git repository (`git init`) and an initial commit is made with the skeleton files.
+
+### Verification
+- Run `ls -la` and confirm `package.json`, `.env.example`, `.gitignore`, `README.md`, `monitor.js`, and `package-lock.json` exist.
+- Run `git status` and confirm the repository is initialized and clean.
+- Run `npm audit --audit-level=high` and confirm `found 0 vulnerabilities`.
+- Run `grep -r "woodWorkingClass" . --include="*.md"` and confirm no stale references.
 
 ---
 
@@ -48,6 +54,13 @@ Implement the first part of the monitoring flow: fetching the WebTrac base searc
 - [ ] If the token cannot be found, the script logs a clear error and exits without crashing.
 - [ ] The extracted token is logged (without exposing it fully in production logs) for debugging purposes.
 
+### Verification
+- Copy `.env.example` to `.env` and fill in real values.
+- Run `node monitor.js --once`.
+- Confirm the output shows `SEARCH_BASE_URL` was fetched successfully.
+- Confirm a token length or presence is logged without printing the full token.
+- Temporarily break the URL or selector and confirm the script logs an error and exits cleanly.
+
 ---
 
 ## T3 — Implement WOOD Search Request and Results Parsing
@@ -65,6 +78,12 @@ Use the CSRF token from T2 to construct and request the WOOD search URL. Parse t
 - [ ] The script parses each class row using `node-html-parser` and extracts class name, activity number, section ID, date range, time, location, status text, and item detail URL.
 - [ ] The extracted data is logged for debugging without exposing tokens.
 - [ ] If the HTML structure cannot be parsed, the script logs an error and exits gracefully.
+
+### Verification
+- Run `node monitor.js --once`.
+- Confirm the output shows the constructed search URL and the number of class rows parsed.
+- Confirm at least one parsed class contains: name, activity number, section ID, date range, time, location, status text, and item detail URL.
+- Save a sample of the search results HTML for later regression tests.
 
 ---
 
@@ -86,6 +105,12 @@ Classify each parsed class by its status text and filter out classes whose start
 - [ ] Classes with a start date in the past are excluded.
 - [ ] The script logs the number of available and waitlist classes found.
 
+### Verification
+- Run `node monitor.js --once`.
+- Confirm the counts of available and waitlist classes match the visible WebTrac statuses.
+- Verify classes with start dates in the past are excluded from the counts.
+- Compare the parsed results against the live site manually for a few rows.
+
 ---
 
 ## T5 — Implement Email Notification
@@ -105,6 +130,14 @@ Send a Gmail notification when one or more classes are detected as available or 
 - [ ] If no matching classes are found, no email is sent.
 - [ ] If email sending fails, the error is logged and the process continues.
 
+### Verification
+- Run `node monitor.js --once` when available or waitlist classes exist.
+- Confirm the email is received at `NOTIFY_TO`.
+- Verify the subject indicates available or waitlist.
+- Verify the body lists each class with name, activity number, section ID, dates, status, and a link to `SEARCH_BASE_URL`.
+- When no classes match, confirm no email is sent.
+- Temporarily break the email credentials and confirm the error is logged but the script does not crash.
+
 ---
 
 ## T6 — Implement Scheduling, Logging, and Error Handling
@@ -122,6 +155,12 @@ Add the scheduling loop, run logging, and comprehensive error handling so the sc
 - [ ] HTTP errors, parse errors, and email errors are logged but do not crash the process.
 - [ ] The script exits cleanly after each run and relies on the scheduler for the next execution.
 - [ ] The polling interval is respected and does not exceed the configured value.
+
+### Verification
+- Add a `crontab` or `launchd` entry based on `CHECK_INTERVAL_MINUTES`.
+- Run the script manually and confirm the log file contains a timestamp, classes checked, and available/waitlist counts.
+- Temporarily break the network, the HTML parser, or the email config and confirm the script logs an error and exits cleanly.
+- Wait for one scheduled interval and confirm the scheduler triggers another run.
 
 ---
 
@@ -142,6 +181,14 @@ Run the complete monitor against the live Arlington WebTrac site and verify that
 - [ ] The script correctly classifies all observed statuses: `Unavailable`, `Waitlist`, and `Available`.
 - [ ] When forced to detect a known available or waitlist class (or via a test scenario), the script sends an email.
 - [ ] The script logs each run correctly.
+
+### Verification
+- Run the script against the live Arlington WebTrac site.
+- Confirm no errors, the CSRF token is extracted, and WOOD search results are retrieved.
+- Confirm at least one class row is parsed correctly.
+- Confirm all observed statuses (`Unavailable`, `Waitlist`, `Available`) are classified correctly.
+- Force a known available or waitlist detection (or temporarily tweak status keywords) and confirm an email is sent.
+- Review the log file for correct run metadata.
 
 ---
 
@@ -167,6 +214,13 @@ Complete the project documentation so the user can install, configure, run, and 
 - [ ] `.env.example` has clear comments for every variable.
 - [ ] `requirements.md`, `implementation-plan.md`, and `tickets.md` are cross-referenced correctly.
 - [ ] The project is ready for handoff.
+
+### Verification
+- Clone the repository into a fresh directory and follow the `README.md` instructions end-to-end.
+- Confirm the monitor runs once with `npm test` or `node monitor.js --once`.
+- Confirm `.env.example` comments clearly explain every variable.
+- Spot-check that `requirements.md`, `implementation-plan.md`, and `tickets.md` are consistent and cross-referenced.
+- Confirm no secrets are committed.
 
 ---
 
