@@ -70,10 +70,9 @@ The design prioritizes configurability so the same script can monitor other WebT
    - Section ID from the activity number suffix (e.g., `440180-A` → `A`)
    - Dates, time, location, status text
    - Item detail URL from the activity link
-8. **Filter future classes** by comparing the start date to today.
-9. **Classify statuses** against configured keywords.
-10. **Log matching classes** to the console with color-coded status.
-11. **Log the run** result and any errors.
+8. **Classify statuses** against configured keywords.
+9. **Log all classes** to the console with full metadata.
+10. **Log the run** result and any errors.
 
 ---
 
@@ -122,9 +121,6 @@ Compare the parsed status text against the configured keywords:
 - `STATUS_UNAVAILABLE` → `Unavailable`
 
 Only classes matching `STATUS_AVAILABLE` (and optionally `STATUS_WAITLIST` if `NOTIFY_ON_WAITLIST=true`) are highlighted in the matching classes summary.
-
-### Date filtering
-Parse the start date from the date range cell and compare it to the current date. Only classes with a start date today or in the future are considered.
 
 ---
 
@@ -189,7 +185,6 @@ The implementation is complete when:
 - The script retrieves the WOOD search results.
 - The script correctly parses each class row and extracts the required metadata.
 - The script correctly identifies `Available`, `Waitlist`, and `Unavailable` classes.
-- The script filters out classes whose start date has passed.
-- The script logs matching classes for the user.
+- The script logs all classes for the user with full metadata.
 - The `.env` file controls all configurable behavior.
 - The `README.md` explains how to install, configure, and run the monitor manually.

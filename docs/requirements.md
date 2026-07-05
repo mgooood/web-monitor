@@ -39,16 +39,13 @@ The system must detect the following availability states from the class row stat
 
 A class is considered available for registration when its status text is `Available`. A class is considered waitlist-only when its status text is `Waitlist`.
 
-### F6 — Filter Future Classes
-The system must ignore classes whose end date has already passed. Only classes with a start date today or in the future should be considered.
-
-### F7 — Log Matching Classes
+### F6 — Log Matching Classes
 When matching classes are found, the system must log each class with its name, activity number, section ID, date range, status, and a link to the base search page (`https://vaarlingtonweb.myvscloud.com/webtrac/web/search.html`) so the user can re-run the search manually and register.
 
-### F8 — Handle Empty Results
+### F7 — Handle Empty Results
 If no woodworking classes are returned, or all classes are `Unavailable`, the system must complete without logging matching classes.
 
-### F9 — Log Execution Status
+### F8 — Log Execution Status
 The system must log each run with a timestamp, the number of classes checked, and the number of available or waitlist classes found.
 
 ---
@@ -140,10 +137,10 @@ The `.env.example` file must list all required environment variables with placeh
 | Requirement ID | Behavior |
 |---|---|
 | F1, F2 | Authenticate with WebTrac and run the search |
-| F3, F4, F6 | Collect the full list of relevant woodworking classes |
-| F5, F7 | Detect openings and log them for the user |
-| F8 | Stay quiet when nothing changes |
-| F9 | Provide visibility into each run |
+| F3, F4 | Collect the full list of relevant woodworking classes |
+| F5, F6 | Detect openings and log them for the user |
+| F7 | Stay quiet when nothing changes |
+| F8 | Provide visibility into each run |
 | N11 | Display all parsed classes with color-coded status in the console |
 | N1, N2, N3 | Keep the solution free and local |
 | N4, N5 | Keep configuration out of source control |

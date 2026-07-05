@@ -89,27 +89,9 @@ Use the CSRF token from T2 to construct and request the WOOD search URL. Parse t
 
 ## T4 — Implement Availability Detection and Future-Date Filtering
 
-**Status:** In Progress
-**Requirements:** F5, F6, C3, C4, N7
-**Dependencies:** T3
+**Status:** Removed
 
-### Description
-Classify each parsed class by its status text and filter out classes whose start date has already passed. Only classes with a start date today or in the future are considered.
-
-### Acceptance Criteria
-- [ ] Each class status is compared against `STATUS_AVAILABLE`, `STATUS_WAITLIST`, and `STATUS_UNAVAILABLE` from `.env`.
-- [ ] Classes with `STATUS_AVAILABLE` are marked as available.
-- [ ] Classes with `STATUS_WAITLIST` are marked as waitlist if `NOTIFY_ON_WAITLIST=true`.
-- [ ] Classes with `STATUS_UNAVAILABLE` are ignored.
-- [ ] The start date is parsed from the date range and compared to the current date.
-- [ ] Classes with a start date in the past are excluded.
-- [ ] The script logs the number of available and waitlist classes found.
-
-### Verification
-- Run `node monitor.js --once`.
-- Confirm the counts of available and waitlist classes match the visible WebTrac statuses.
-- Verify classes with start dates in the past are excluded from the counts.
-- Compare the parsed results against the live site manually for a few rows.
+Future-date filtering is out of scope for this version. The user wants to see all WOOD classes regardless of start date. Availability detection and color-coded console output are already implemented in T3.
 
 ---
 
@@ -123,9 +105,9 @@ Email notifications are out of scope for this version. The user will run the mon
 
 ## T6 — Implement Logging and Error Handling
 
-**Status:** Open
-**Requirements:** F8, F9, N6, N7, N8, N9, C2
-**Dependencies:** T4
+**Status:** In Progress
+**Requirements:** F7, F8, N6, N7, N8, N9, C2
+**Dependencies:** T3
 
 ### Description
 Add run logging and error handling so the script produces useful output when run manually and fails gracefully when something goes wrong.
@@ -205,9 +187,9 @@ Complete the project documentation so the user can install, configure, run, and 
 |---|---|
 | T1 | N1, N2, N4, N5, I1, I3, I4 |
 | T2 | F1, N8, N10 |
-| T3 | F2, F3, F4, N7, N8, N10, C1 |
-| T4 | F5, F6, C3, C4, N7 |
+| T3 | F2, F3, F4, N7, N8, N10, N11, C1 |
+| T4 | Removed |
 | T5 | Removed |
-| T6 | F8, F9, N6, N7, N8, N9, C2 |
+| T6 | F7, F8, N6, N7, N8, N9, C2 |
 | T7 | All functional and non-functional requirements |
 | T8 | I3, I4, N1, N2, N3, N4, N5 |
