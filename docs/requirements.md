@@ -85,6 +85,9 @@ The system should not poll the site more frequently than necessary to avoid bein
 ### N10 — Configurable and Reusable
 The system must be driven by configuration values rather than hardcoded values. This allows the same script to be reused for other class types, locations, or WebTrac modules by changing the `.env` file.
 
+### N11 — Console Output
+When run manually, the script must display all parsed classes and their metadata in the console. Status text must be color-coded: unavailable in red, waitlist in orange, and available in green.
+
 ---
 
 ## Configuration Requirements
@@ -141,6 +144,7 @@ The `.env.example` file must list all required environment variables with placeh
 | F5, F7 | Detect openings and log them for the user |
 | F8 | Stay quiet when nothing changes |
 | F9 | Provide visibility into each run |
+| N11 | Display all parsed classes with color-coded status in the console |
 | N1, N2, N3 | Keep the solution free and local |
 | N4, N5 | Keep configuration out of source control |
 | N6, N9, C2 | Optionally run repeatedly at a safe interval |

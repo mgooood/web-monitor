@@ -66,32 +66,31 @@ Implement the first part of the monitoring flow: fetching the WebTrac base searc
 
 ## T3 — Implement WOOD Search Request and Results Parsing
 
-**Status:** Open
-**Requirements:** F2, F3, F4, N7, N8, N10, C1
+**Status:** Done
+**Requirements:** F2, F3, F4, N7, N8, N10, N11, C1
 **Dependencies:** T2
 
 ### Description
 Use the CSRF token from T2 to construct and request the WOOD search URL. Parse the returned HTML to identify all class rows and extract the required metadata.
 
 ### Acceptance Criteria
-- [ ] The script constructs a GET URL with the extracted token and required parameters: `Action=Start`, `type=SEARCH_TYPE`, `module=SEARCH_MODULE`, and any other parameters needed to match the manual search.
-- [ ] The script fetches the search results HTML.
-- [ ] The script parses each class row using `node-html-parser` and extracts class name, activity number, section ID, date range, time, location, status text, and item detail URL.
-- [ ] The extracted data is logged for debugging without exposing tokens.
-- [ ] If the HTML structure cannot be parsed, the script logs an error and exits gracefully.
+- [x] The script constructs a GET URL with the extracted token and required parameters: `Action=Start`, `type=SEARCH_TYPE`, `module=SEARCH_MODULE`, and any other parameters needed to match the manual search.
+- [x] The script navigates to the search results URL using Playwright.
+- [x] The script parses each class row using `node-html-parser` and extracts class name, activity number, section ID, date range, time, location, status text, and item detail URL.
+- [x] The extracted data is logged for debugging without exposing tokens.
+- [x] If the HTML structure cannot be parsed, the script logs an error and exits gracefully.
 
 ### Verification
-- Run `node monitor.js --once`.
+- Run `node monitor.js`.
 - Confirm the output shows the constructed search URL and the number of class rows parsed.
 - Confirm at least one parsed class contains: name, activity number, section ID, date range, time, location, status text, and item detail URL.
-- Save a sample of the search results HTML for later regression tests.
 
 ---
 
 ## T4 — Implement Availability Detection and Future-Date Filtering
 
-**Status:** Open
-**Requirements:** F5, F6, C5, C6, N7
+**Status:** In Progress
+**Requirements:** F5, F6, C3, C4, N7
 **Dependencies:** T3
 
 ### Description
