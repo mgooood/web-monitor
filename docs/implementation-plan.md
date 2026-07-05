@@ -1,0 +1,213 @@
+# Woodshop Class Availability Monitor — Implementation Plan
+
+---
+description: Technical implementation plan for the WebTrac class availability monitor.
+---
+
+## Overview
+This plan describes how to implement the requirements defined in `requirements.md`. The solution is a Node.js script that polls the Arlington WebTrac search page for woodworking classes, detects when classes become `Available` or `Waitlist`, and sends an email notification.
+
+The design prioritizes configurability so the same script can monitor other WebTrac class types or locations by changing environment variables.
+
+---
+
+## Goals
+
+- Build a reliable, free monitor that runs on the user’s Mac.
+- Avoid hardcoding WebTrac-specific values.
+- Parse the HTML search results without relying on brittle full-page regex.
+- Send clear, actionable email notifications.
+- Gracefully handle network failures and HTML changes.
+
+---
+
+## Tech Stack
+
+| Component | Technology | Purpose |
+|---|---|---|
+| Runtime | Node.js | Already installed on the user’s Mac |
+| HTTP client | Built-in `fetch` | Request base page and search results |
+| HTML parser | `node-html-parser` | Fast HTML parser with zero runtime dependencies |
+| Email | `nodemailer` | Send Gmail notifications |
+| Secrets | Built-in `.env` parser | Load configuration from `.env` without extra dependencies |
+| Scheduling | macOS `cron` or `launchd` | Run the monitor on a configurable interval |
+
+---
+
+## Architecture
+
+```text
+┌─────────────┐      ┌──────────────┐      ┌─────────────┐
+│   Cron      │─────▶│   monitor.js  │─────▶│  WebTrac    │
+│(cron/launchd)│      │              │      │ search.html │
+└─────────────┘      └──────────────┘      └─────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │  node-html   │
+                     │    parser    │
+                     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │  Nodemailer  │
+                     │  Gmail SMTP  │
+                     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │  User email  │
+                     └──────────────┘
+```
+
+---
+
+## Data Flow
+
+1. **Load configuration** from `.env`.
+2. **Fetch base search page** (`SEARCH_BASE_URL`).
+3. **Parse HTML** with `node-html-parser` to extract the `_csrf_token` hidden input value.
+4. **Construct search URL** with token and parameters: `Action=Start`, `type=SEARCH_TYPE`, `module=SEARCH_MODULE`, and any required defaults.
+5. **Fetch search results** via GET.
+6. **Parse results HTML** with `node-html-parser` to find every class row.
+7. **Extract per-class metadata**:
+   - Name from the result header or section title
+   - Activity number from the row
+   - Section ID from the activity number suffix (e.g., `440180-A` → `A`)
+   - Dates, time, location, status text
+   - Item detail URL from the activity link
+8. **Filter future classes** by comparing the start date to today.
+9. **Classify statuses** against configured keywords.
+10. **Send email** if any `Available` or `Waitlist` classes match the configured notification rules.
+11. **Log the run** result and any errors.
+
+---
+
+## File Structure
+
+```text
+web-monitor/
+├── .env                      # User secrets and config (ignored by Git)
+├── .env.example              # Template with placeholder values
+├── .gitignore                # Ignores .env and node_modules
+├── implementation-plan.md    # This file
+├── monitor.js                # Main script
+├── package.json              # Dependencies and scripts
+├── README.md                 # Setup and usage instructions
+├── requirements.md           # Product requirements
+└── tickets.md                # Engineering task breakdown
+```
+
+---
+
+## Parsing Strategy
+
+WebTrac returns server-rendered HTML. The search results page contains collapsible result containers and an internal table for each class.
+
+### Base page token extraction
+Use a CSS selector to find the hidden input:
+
+```javascript
+const token = root.querySelector('input[name="_csrf_token"]')?.getAttribute('value');
+```
+
+### Search results parsing
+For each result container:
+- Find the class name from the result header (`<h2>` or `<div class="result-header__info">`).
+- Find the internal table rows (`<tbody> tr`).
+- For each row:
+  - Extract the activity number from the first activity link text.
+  - Derive the section ID from the suffix after the dash, if present.
+  - Extract the date range, time, location, and status from the corresponding cells.
+  - Extract the item detail URL from the `href` attribute.
+
+### Status detection
+Compare the parsed status text against the configured keywords:
+- `STATUS_AVAILABLE` → `Available`
+- `STATUS_WAITLIST` → `Waitlist`
+- `STATUS_UNAVAILABLE` → `Unavailable`
+
+Only classes matching `STATUS_AVAILABLE` (and optionally `STATUS_WAITLIST` if `NOTIFY_ON_WAITLIST=true`) trigger an email.
+
+### Date filtering
+Parse the start date from the date range cell and compare it to the current date. Only classes with a start date today or in the future are considered.
+
+---
+
+## Configuration Strategy
+
+All runtime values live in `.env`. The script reads them once at startup via a built-in parser that reads the file line by line and populates `process.env`. No hardcoded values should exist in `monitor.js` except defaults for the `.env` example.
+
+Key configuration groups:
+- **Gmail:** sender address, App Password, recipient
+- **Search:** base URL, type code, module
+- **Status:** keyword mappings
+- **Behavior:** waitlist toggle, check interval
+
+---
+
+## Notification Strategy
+
+Use `nodemailer` with Gmail SMTP:
+- Host: `smtp.gmail.com`
+- Port: `587`
+- Security: `STARTTLS`
+- Auth: Gmail address + App Password
+
+The email subject should indicate whether an available or waitlist class was found. The body should list each class with name, activity number, section ID, dates, status, and a link to the base search page.
+
+---
+
+## Scheduling Strategy
+
+Use macOS `cron` or `launchd` to schedule the monitor based on `CHECK_INTERVAL_MINUTES`. The script is designed to run once per invocation and exit, so the scheduler handles repetition.
+
+Example `crontab` entry for 10 minutes:
+
+```bash
+*/10 * * * * cd /Users/markgood/HomeProjects/web-monitor && /usr/local/bin/node monitor.js >> monitor.log 2>&1
+```
+
+For `launchd`, create a plist that runs `monitor.js` on the configured interval.
+
+---
+
+## Error Handling Strategy
+
+- **HTTP errors:** Log status code and response snippet. Do not send notification.
+- **Token extraction failure:** Log error and exit the current run. Retry on next interval.
+- **HTML structure changes:** Wrap parsing in try/catch, log the error, and continue. Do not crash the process.
+- **Email send failure:** Log the error. Do not retry within the same run to avoid spamming Gmail.
+- **No classes found:** Log and exit silently.
+- **All classes unavailable:** Log and exit silently.
+
+---
+
+## Risks and Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| WebTrac changes its HTML structure | Use `node-html-parser` CSS selectors that target semantic classes and data attributes rather than brittle DOM positions. Wrap parsing in error handling. |
+| CSRF token format changes | Extract by input name, not position. Log token presence or absence. |
+| Site rate-limits or blocks the script | Default 10-minute interval. Add jitter or back-off if needed. |
+| Gmail App Password is revoked | Document how to regenerate in `README.md`. |
+| Status keywords differ for other WebTrac locations | Make keywords configurable via `.env`. |
+| Date format varies by locale | Use a flexible date parser (e.g., `MM/DD/YYYY`). |
+| Class has no section ID suffix | Handle gracefully by setting section ID to empty string. |
+
+---
+
+## Acceptance Criteria
+
+The implementation is complete when:
+
+- `monitor.js` runs without errors on the user’s Mac.
+- The script successfully extracts the CSRF token from the base page.
+- The script retrieves the WOOD search results.
+- The script correctly parses each class row and extracts the required metadata.
+- The script correctly identifies `Available`, `Waitlist`, and `Unavailable` classes.
+- The script filters out classes whose start date has passed.
+- The script sends an email when an `Available` class is found.
+- The `.env` file controls all configurable behavior.
+- The `README.md` explains how to install, configure, and run the monitor.
+- The project runs continuously on a schedule.

@@ -1,0 +1,21 @@
+{
+  "name": "web-monitor",
+  "version": "1.0.0",
+  "description": "Monitors WebTrac for open classes and sends email alerts when availability changes.",
+  "main": "monitor.js",
+  "scripts": {
+    "start": "node monitor.js",
+    "test": "node monitor.js --once"
+  },
+  "keywords": [
+    "webtrac",
+    "monitor",
+    "classes"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-html-parser": "8.0.4",
+    "nodemailer": "9.0.3"
+  }
+}
