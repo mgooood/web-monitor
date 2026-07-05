@@ -4,7 +4,7 @@ Monitors a WebTrac site for open classes and displays availability information i
 
 ## Status
 
-This project is currently under construction. T1, T2, T3, and T6 are complete.
+This project is currently under construction. T1, T2, T3, T6, and T7 are complete.
 
 T2 uses Playwright to open a real Chrome browser because the Arlington WebTrac site is protected by Cloudflare, which blocks plain HTTP requests from Node.js and curl.
 

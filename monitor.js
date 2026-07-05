@@ -193,8 +193,10 @@ function logResults(results, config) {
 
   console.log('All classes:');
   for (const item of results) {
-    console.log(`- ${item.className} [${item.sectionId}]`);
-    console.log(`  Activity: ${item.fullActivity}`);
+    console.log(`- ${item.className}`);
+    console.log(`  Activity: ${item.baseActivity}`);
+    console.log(`  Section: ${item.sectionId}`);
+    console.log(`  Full Activity #: ${item.fullActivity}`);
     console.log(`  Status: ${colorStatus(item.status, config)}`);
     console.log(`  Description: ${item.description}`);
     console.log(`  Dates: ${item.dates}`);
@@ -208,7 +210,9 @@ function logResults(results, config) {
     console.log('');
     console.log('Matching classes:');
     for (const item of matching) {
-      console.log(`- ${item.className} [${item.sectionId}]`);
+      console.log(`- ${item.className}`);
+      console.log(`  Activity: ${item.baseActivity}`);
+      console.log(`  Section: ${item.sectionId}`);
       console.log(`  Status: ${colorStatus(item.status, config)}`);
       console.log(`  Link: ${item.detailUrl}`);
     }
