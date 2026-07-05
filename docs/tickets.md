@@ -152,7 +152,7 @@ Run the complete monitor against the live Arlington WebTrac site and verify that
 
 ## T8 — Documentation and Final Review
 
-**Status:** Open
+**Status:** Done
 **Requirements:** I3, I4, N1, N2, N3, N4, N5
 **Dependencies:** T7
 
@@ -160,16 +160,16 @@ Run the complete monitor against the live Arlington WebTrac site and verify that
 Complete the project documentation so the user can install, configure, run, and maintain the monitor without assistance.
 
 ### Acceptance Criteria
-- [ ] `README.md` includes:
-  - [ ] Project overview
-  - [ ] Prerequisites (Node.js, Playwright browsers)
-  - [ ] Installation instructions (`npm install` and `npx playwright install chromium`)
-  - [ ] Configuration instructions (copy `.env.example` to `.env`, fill in values)
-  - [ ] How to run the monitor manually
-  - [ ] Troubleshooting section for common errors
-- [ ] `.env.example` has clear comments for every variable.
-- [ ] `requirements.md`, `implementation-plan.md`, and `tickets.md` are cross-referenced correctly.
-- [ ] The project is ready for handoff.
+- [x] `README.md` includes:
+  - [x] Project overview
+  - [x] Prerequisites (Node.js, Playwright browsers, Google Chrome)
+  - [x] Installation instructions (`npm install` and `npx playwright install chromium`)
+  - [x] Configuration instructions (copy `.env.example` to `.env`, fill in values)
+  - [x] How to run the monitor manually
+  - [x] Troubleshooting section for common errors
+- [x] `.env.example` has clear comments for every variable.
+- [x] `requirements.md`, `implementation-plan.md`, and `tickets.md` are cross-referenced correctly.
+- [x] The project is ready for handoff.
 
 ### Verification
 - Clone the repository into a fresh directory and follow the `README.md` instructions end-to-end.
