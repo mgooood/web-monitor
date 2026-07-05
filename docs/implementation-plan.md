@@ -5,7 +5,7 @@ description: Technical implementation plan for the WebTrac class availability mo
 ---
 
 ## Overview
-This plan describes how to implement the requirements defined in `requirements.md`. The solution is a Node.js script that polls the Arlington WebTrac search page for woodworking classes, detects when classes become `Available` or `Waitlist`, and sends an email notification.
+This plan describes how to implement the requirements defined in `requirements.md`. The solution is a Node.js script that fetches the Arlington WebTrac search page for woodworking classes, detects when classes become `Available` or `Waitlist`, and logs the results to the console.
 
 The design prioritizes configurability so the same script can monitor other WebTrac class types or locations by changing environment variables.
 
@@ -16,7 +16,7 @@ The design prioritizes configurability so the same script can monitor other WebT
 - Build a reliable, free monitor that runs on the user’s Mac.
 - Avoid hardcoding WebTrac-specific values.
 - Parse the HTML search results without relying on brittle full-page regex.
-- Send clear, actionable email notifications.
+- Display clear, actionable class availability information in the console.
 - Gracefully handle network failures and HTML changes.
 
 ---
@@ -28,9 +28,8 @@ The design prioritizes configurability so the same script can monitor other WebT
 | Runtime | Node.js | Already installed on the user’s Mac |
 | HTTP client | `playwright` | Request base page and search results through a real browser to bypass bot detection |
 | HTML parser | `node-html-parser` | Fast HTML parser with zero runtime dependencies |
-| Email | `nodemailer` | Send Gmail notifications |
-| Secrets | Built-in `.env` parser | Load configuration from `.env` without extra dependencies |
-| Scheduling | macOS `cron` or `launchd` | Run the monitor on a configurable interval |
+| Configuration | Built-in `.env` parser | Load configuration from `.env` without extra dependencies |
+| Scheduling | macOS `cron` or `launchd` | Optionally run the monitor on a configurable interval |
 
 ---
 
@@ -50,13 +49,8 @@ The design prioritizes configurability so the same script can monitor other WebT
                             │
                             ▼
                      ┌──────────────┐
-                     │  Nodemailer  │
-                     │  Gmail SMTP  │
-                     └──────────────┘
-                            │
-                            ▼
-                     ┌──────────────┐
-                     │  User email  │
+                     │  Console     │
+                     │  output      │
                      └──────────────┘
 ```
 
@@ -78,7 +72,7 @@ The design prioritizes configurability so the same script can monitor other WebT
    - Item detail URL from the activity link
 8. **Filter future classes** by comparing the start date to today.
 9. **Classify statuses** against configured keywords.
-10. **Send email** if any `Available` or `Waitlist` classes match the configured notification rules.
+10. **Log matching classes** to the console with color-coded status.
 11. **Log the run** result and any errors.
 
 ---
@@ -127,7 +121,7 @@ Compare the parsed status text against the configured keywords:
 - `STATUS_WAITLIST` → `Waitlist`
 - `STATUS_UNAVAILABLE` → `Unavailable`
 
-Only classes matching `STATUS_AVAILABLE` (and optionally `STATUS_WAITLIST` if `NOTIFY_ON_WAITLIST=true`) trigger an email.
+Only classes matching `STATUS_AVAILABLE` (and optionally `STATUS_WAITLIST` if `NOTIFY_ON_WAITLIST=true`) are highlighted in the matching classes summary.
 
 ### Date filtering
 Parse the start date from the date range cell and compare it to the current date. Only classes with a start date today or in the future are considered.
